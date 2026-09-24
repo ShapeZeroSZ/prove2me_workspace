@@ -3,7 +3,8 @@ import Definitions.Def_PassivityTorus_power
 
 open Matrix BigOperators
 
-namespace PassivityTorus
+namespace PassivityTorusSol
+open PassivityTorus
 
 theorem shift_apply_self {q L : ℕ} (x : Site q L) (a : Fin q) (s : Fin L) :
     shift x a s a = x a + s := by simp [shift]
@@ -116,39 +117,12 @@ theorem symm_of_passive (q L d : ℕ) [NeZero L] (hL : 3 ≤ L)
     · rw [v0 z hzx hzy, zero_dotProduct]
   · simp
 
-theorem passive_iff_symm (q L d : ℕ) [NeZero L] (hL : 3 ≤ L)
+end PassivityTorusSol
+
+open PassivityTorus PassivityTorusSol
+
+theorem solution (q L d : ℕ) [NeZero L] (hL : 3 ≤ L)
     (W : Site q L → Fin q → Matrix (Fin d) (Fin d) ℝ) :
     (∀ v : Site q L → (Fin d → ℝ), power q L d W v = 0)
       ↔ ∀ x a, (W x a)ᵀ = W x a :=
   ⟨symm_of_passive q L d hL W, fun hW v => passive_of_symm q L d W hW v⟩
-
-/-- Local-only (mission 4a, section 5): at L = 2 the hypothesis fails and so does the
-conclusion. For every q >= 1, the same non-symmetric matrix on every link gives
-zero power for every velocity field. -/
-theorem counterexample_L2 (q : ℕ) (hq : 0 < q) :
-    ∃ W : Site q 2 → Fin q → Matrix (Fin 2) (Fin 2) ℝ,
-      (∀ v : Site q 2 → (Fin 2 → ℝ), power q 2 2 W v = 0) ∧
-        ¬ ∀ x a, (W x a)ᵀ = W x a := by
-  set M : Matrix (Fin 2) (Fin 2) ℝ := !![0, 1; 0, 0] with hM
-  refine ⟨fun _ _ => M, fun v => ?_, fun h => ?_⟩
-  · rw [power_eq, Finset.sum_comm]
-    refine Finset.sum_eq_zero fun a _ => ?_
-    set A := M - Mᵀ
-    have hA : Aᵀ = -A := by simp [A, Matrix.transpose_sub]
-    have twice : ∀ x : Site q 2, shift (shift x a 1) a 1 = x := by
-      intro x
-      have h1 : (-1 : Fin 2) = 1 := by decide
-      simpa [h1] using shift_forward_back x a
-    have key : ∑ x : Site q 2, v x ⬝ᵥ (A *ᵥ v (shift x a 1))
-        = -∑ x : Site q 2, v x ⬝ᵥ (A *ᵥ v (shift x a 1)) := by
-      conv_lhs => rw [← Equiv.sum_comp (stepEquiv a)]
-      rw [← Finset.sum_neg_distrib]
-      refine Finset.sum_congr rfl fun x _ => ?_
-      simp only [stepEquiv, Equiv.coe_fn_mk, twice]
-      rw [dotProduct_mulVec, dotProduct_comm, ← mulVec_transpose, hA, neg_mulVec,
-        dotProduct_neg]
-    linarith
-  · have := congrFun (congrFun (h (fun _ => 0) ⟨0, hq⟩) 0) 1
-    simp [M] at this
-
-end PassivityTorus

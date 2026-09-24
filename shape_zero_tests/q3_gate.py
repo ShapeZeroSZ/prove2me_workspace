@@ -84,16 +84,19 @@ def v_max(kappa):
 
 
 def no_wrap_check(L0, t, kappa):
-    """Nothing may re-enter a segment window before readout:
-    forward front (x0 + vmax t + 4 widths) must not wrap round to the first window;
-    backward stray (x0 - vmax t) must not wrap round to the last window's far edge."""
+    """Nothing may re-enter a segment window before readout. Both fronts are the
+    packet centre plus 4 widths of leading tail, moving at v_max:
+    forward front must not wrap round to the first window's near edge;
+    backward stray must not wrap round to the last window's far edge.
+    (An earlier version omitted the tail on the backward side and accepted a
+    240-site lattice on which the backward stray re-entered the second window
+    at t ~ 350, just before it could clear.)"""
     vt = v_max(kappa) * t
     first_win, last_win = SEGS[0] - 10, SEGS[1] + len(M.RAMP) + 10
-    fwd_ok = X0 + vt + 4 * WIDTH < L0 + first_win
-    bwd_ok = vt < X0 + L0 - last_win
-    return fwd_ok and bwd_ok, dict(v_max=v_max(kappa), travel=vt,
-                                   fwd_margin=L0 + first_win - (X0 + vt + 4 * WIDTH),
-                                   bwd_margin=X0 + L0 - last_win - vt)
+    fwd_margin = L0 + first_win - (X0 + vt + 4 * WIDTH)
+    bwd_margin = X0 + L0 - last_win - (vt + 4 * WIDTH)
+    return fwd_margin > 0 and bwd_margin > 0, dict(v_max=v_max(kappa), travel=vt,
+                                                   fwd_margin=fwd_margin, bwd_margin=bwd_margin)
 
 
 # --------------------------------------------------------------- one run
@@ -203,7 +206,7 @@ def evaluate(runs, predictor, L0, S):
 # --------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--L0", type=int, default=240)
+    ap.add_argument("--L0", type=int, default=280)
     ap.add_argument("--S", type=int, default=8)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--predictor", choices=("averaged", "carrier"), default="averaged")

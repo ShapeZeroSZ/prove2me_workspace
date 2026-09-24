@@ -21,8 +21,12 @@ PASS iff every per-order error < 1 deg, both split errors < 1 deg, and both
 Abelian floors < 0.5 deg.
 
 usage:
-  python3 q3_gate.py [--L0 240] [--S 8] [--workers 4] [--predictor averaged|carrier]
-  python3 q3_gate.py --from-saved q3_gate_runs_240x8.json --predictor carrier
+  python3 q3_gate.py [--L0 260] [--S 8] [--workers 4] [--predictor averaged|carrier]
+  python3 q3_gate.py --from-saved q3_gate_runs_260x8.json --predictor carrier
+
+Default 260 x 8 x 8 is the smallest lattice verified to clear and pass
+(11.6 min wall on 4 workers). 240 fails to clear: the backward stray
+re-enters the second window at t ~ 350.
 """
 import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -206,7 +210,7 @@ def evaluate(runs, predictor, L0, S):
 # --------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--L0", type=int, default=280)
+    ap.add_argument("--L0", type=int, default=260)
     ap.add_argument("--S", type=int, default=8)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--predictor", choices=("averaged", "carrier"), default="averaged")

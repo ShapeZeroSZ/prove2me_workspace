@@ -135,6 +135,37 @@ each component through the segments with its own ω(k) and transverse term.
 Reported: errors 2.70° → 0.11° (single), 5.09° → 0.04° (u(2) split),
 4.43° → 0.17° (u(3) split).
 
+### 9. q = 3 ordering gate (permanent check)
+`q3_gate.py` → `q3_gate_runs_<L0>x<S>.json` (runs) and
+`q3_gate_result_<L0>x<S>_<predictor>.json` (verdict)
+
+Runs on the **working** `model.py` in this folder (archive 948b09e8 plus a note
+in `run_until_exit` that at q = 3 its certificate fires with ~98% of the packet
+still in the windows; the pinned copies are untouched). Eight evolutions
+(u(2), u(3): AB, BA, two Abelian-floor orders), same packet, segments and
+strengths as section 7, clearing readout, spectrum-averaged prediction.
+
+**PASS** iff every per-order error < 1°, both split errors < 1°, and both
+Abelian floors < 0.5°. The gate gives no verdict (exit 2) if a window fails to
+clear to 10⁻⁶ or if the lattice is too short to rule out a wave re-entering a
+window before readout (both fronts: centre + 4 packet widths at the band's
+maximum group velocity, 0.497).
+
+    python3 q3_gate.py                                  # 260 x 8 x 8, averaged
+    python3 q3_gate.py --from-saved q3_gate_runs_260x8.json --predictor carrier
+
+| lattice | clears | averaged prediction | single-wavenumber prediction | runtime (4 workers) |
+|---|---|---|---|---|
+| 320 × 12 × 12 (section 7 runs) | yes, t = 335–346 | **PASS** — 0.04–0.17° | **FAIL** — 3.0–5.2° | not timed precisely (roughly 2–3 h wall for the section-7 jobs) |
+| **260 × 8 × 8 (default)** | yes, t = 335–346 | **PASS** — 0.10–0.18° | **FAIL** — 2.4–5.1° | **11.6 min wall, 46 min CPU** |
+| 240 × 8 × 8 | **no** — backward stray re-enters window 2 at t ≈ 350 (bottomed at 1.7×10⁻⁶) | — | — | — |
+
+Smallest lattice: 260 is the shortest length the no-wrap check accepts (240 is
+rejected at −6 sites and failed to clear in a direct run). The slab is kept at
+8 × 8: its transverse profile still varies 35× across the slab (12 × 12: ~3000×)
+with transverse term Qt = 0.074 (12 × 12: 0.102); at 6 × 6 the contrast falls to
+7×, approaching the transverse-uniform trap in which q = 3 reduces to q = 1.
+
 ## Helpers
 
 - `j_compat_test.py` — shared machinery: `KLattice` (stiffness K as a parameter),

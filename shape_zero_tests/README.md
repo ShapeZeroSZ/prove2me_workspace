@@ -6,17 +6,34 @@ produced by the script named next to it, with the settings listed.
 
 ## Running
 
-The scripts import the archive's `model.py`, which is **not** in this repository.
-Point `MODEL_DIR` at the archive's `ark/04_scripts/session/` directory:
+Everything runs from this folder alone. Run scripts from inside
+`shape_zero_tests/` (several read their results files by relative path):
 
-    MODEL_DIR=/path/to/ark/04_scripts/session python3 <script> [args]
+    cd shape_zero_tests
+    python3 <script> [args]
 
-Archive versions used:
+Python 3 with NumPy.
 
-- q = 1 work (sections 1–6): archive `c49da46f-shape_zero_ark.zip`
-- q = 3 work (sections 7–8): archive `948b09e8-shape_zero_ark.zip`
+## Pinned model versions
 
-Python 3 with NumPy. Common model settings throughout: c = 1, κ = 0.5, DT = 0.02,
+Each script imports the exact `model.py` it was run with, copied unmodified from
+the Shape Zero archive (`ark/04_scripts/session/model.py`):
+
+| folder | archive | sha256 | used by |
+|---|---|---|---|
+| `model_versions/c49da46f/` | `c49da46f-shape_zero_ark.zip` | `f486a0083e5fe2956fcb41bc717c6bc6d07ee36676b6b5d8c12f4fd439adb99f` | `j_compat_test.py` (and `grid.py`, `checks.py`, `kscan.py`, `resid.py`, `openrows.py`), `gate7_readout.py` — sections 1–6 |
+| `model_versions/948b09e8/` | `948b09e8-shape_zero_ark.zip` | `427e4c934f0cba3515961d5b9fdf88ebd480a920d1196117412e6736a29a8e9b` | `q3_readout.py`, `q3_combine.py`, `q3_kavg.py` — sections 7–8 |
+
+The two versions differ only in a docstring note in `run_until_exit` and in
+`model.py`'s own gate-7 pass criterion inside `main()`, which these scripts never
+call. Setting `MODEL_DIR`
+still overrides the pinned version. Verify the pins with:
+
+    sha256sum model_versions/*/model.py
+
+Verified from this folder alone (no `MODEL_DIR`): `q3_combine.py` regenerates the
+section-7 table, `q3_kavg.py` reproduces `q3_kavg.json` exactly, and
+`kscan.py check` reproduces its instrument-check values (π/2 ratio 0.0883). Common model settings throughout: c = 1, κ = 0.5, DT = 0.02,
 packet amplitude 10⁻³, colour-0 packet, RK4 integrator from `model.py`.
 
 ## Two readouts
@@ -95,8 +112,9 @@ sim-vs-product unchanged (≤ 0.1°); Abelian floor 0.016° → 0.000°.
 
 ### 7. Gates 7 and 8 at q = 3 (three readouts)
 `q3_readout.py <n> <job>` → `q3/<n>_<job>.json` (progress in `q3/*.log`);
-jobs listed in `q3/jobs.txt`. Table produced by `q3_combine.py 2 3`
-(printed; deterministic from the `q3/*.json` files).
+jobs listed in `q3/jobs.txt`. **Headline table:** `python3 q3_combine.py 2 3`
+reads the `q3/*.json` files (no simulation) and writes `q3_old_vs_new.json`;
+its printed table is saved as `q3_old_vs_new.txt`.
 
 Lattice 320 × 12 × 12 (long axis = propagation), full transverse slab, isotropic
 3-D Gaussian packet width 3 centred at x = 30, k₀ = π/2. Segments at 50 and 70.

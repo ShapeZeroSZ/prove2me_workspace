@@ -14,7 +14,10 @@ segment window [start - 10, start + len(RAMP) + 10) at readout.
 import os, sys, json
 import numpy as np
 
-sys.path.insert(0, os.environ.get("MODEL_DIR", "."))
+# model.py pinned to the archive version this script was run with (c49da46f);
+# MODEL_DIR overrides it.
+sys.path.insert(0, os.environ.get("MODEL_DIR", os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "model_versions", "c49da46f")))
 import model as M
 
 THR = 1e-6

@@ -16,7 +16,10 @@ Compared with the saved CLEARING-readout Bloch vectors.
 """
 import os, sys, json
 import numpy as np
-sys.path.insert(0, os.environ.get("MODEL_DIR", "."))
+# model.py pinned to the archive version this script was run with (948b09e8);
+# MODEL_DIR overrides it.
+sys.path.insert(0, os.environ.get("MODEL_DIR", os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "model_versions", "948b09e8")))
 import model as M
 import q3_readout as Q
 

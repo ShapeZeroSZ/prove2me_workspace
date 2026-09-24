@@ -20,7 +20,10 @@ On-site stiffness K is varied by subclassing Lattice (model.py fixes K = sqrt 5)
 import os, sys, time
 import numpy as np
 
-sys.path.insert(0, os.environ.get("MODEL_DIR", "."))
+# model.py pinned to the archive version this script was run with (c49da46f);
+# MODEL_DIR overrides it.
+sys.path.insert(0, os.environ.get("MODEL_DIR", os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "model_versions", "c49da46f")))
 import model as M
 
 N_SITES, SEG0, N0, WIDTH = 200, 60, 20, 8.0

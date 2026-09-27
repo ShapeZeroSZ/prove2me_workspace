@@ -181,10 +181,6 @@ end OctonionD8Sol
 
 open OctonionD8 Polynomial
 
-theorem solution (θ : ℝ) (hθ₀ : 0 < θ) (hθ₁ : θ < Real.pi) :
-    ((flowMat (Real.cos θ) (Real.sin θ)).charpoly.map (algebraMap ℝ ℂ)).roots =
-      {0, 0, 2 * Complex.I, -(2 * Complex.I),
-        2 * Complex.I * (Real.sin (θ / 2) : ℂ), 2 * Complex.I * (Real.sin (θ / 2) : ℂ),
-        -(2 * Complex.I * (Real.sin (θ / 2) : ℂ)), -(2 * Complex.I * (Real.sin (θ / 2) : ℂ))} ∧
-      0 < Real.sin (θ / 2) ∧ Real.sin (θ / 2) < 1 := by
-  apply OctonionD8Sol.flow_eigenvalues <;> assumption
+theorem solution (c s : ℝ) (h : c ^ 2 + s ^ 2 = 1) :
+    (blockA c s).charpoly = X ^ 2 * (X ^ 2 + 4) := by
+  apply OctonionD8Sol.charpoly_blockA <;> assumption

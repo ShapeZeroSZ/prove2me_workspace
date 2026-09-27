@@ -1,5 +1,5 @@
 import Mathlib
-import Definitions.Def_OctonionD8_flow
+import Definitions.Def_OctonionD8_blocks
 namespace OctonionD8Sol
 
 open OctonionD8 Polynomial
@@ -94,24 +94,7 @@ theorem flow_annihilating (c s : ℝ) (h : c ^ 2 + s ^ 2 = 1) :
       (flowMat c s ^ 2 + (2 - 2 * c) • (1 : Matrix (Fin 8) (Fin 8) ℝ)) = 0 := by
   rw [flow_F, show c ^ 2 + s ^ 2 - 1 = 0 by linarith, zero_smul]
 
-/-- Reordering the basis as (0, 1, 2, 4 | 3, 5, 6, 7). -/
-def blockEquiv : Fin 8 ≃ Fin 4 ⊕ Fin 4 where
-  toFun := ![Sum.inl 0, Sum.inl 1, Sum.inl 2, Sum.inr 0, Sum.inl 3, Sum.inr 1, Sum.inr 2, Sum.inr 3]
-  invFun := Sum.elim ![0, 1, 2, 4] ![3, 5, 6, 7]
-  left_inv := by decide
-  right_inv := by decide
-
-def blockA (c s : ℝ) : Matrix (Fin 4) (Fin 4) ℝ := !![0, -c - 1, -s, 0;
-    c + 1, 0, 0, s;
-    s, 0, 0, 1 - c;
-    0, -s, c - 1, 0]
-
-def blockB (c s : ℝ) : Matrix (Fin 4) (Fin 4) ℝ := !![0, -s, 0, 1 - c;
-    s, 0, 1 - c, 0;
-    0, c - 1, 0, -s;
-    c - 1, 0, s, 0]
-
-theorem reindex_flow (c s : ℝ) :
+theorem flow_block_diag (c s : ℝ) :
     Matrix.reindex blockEquiv blockEquiv (flowMat c s) =
       Matrix.fromBlocks (blockA c s) 0 0 (blockB c s) := by
   rw [flowMat_eq]
@@ -119,14 +102,14 @@ theorem reindex_flow (c s : ℝ) :
   rcases i with i | i <;> rcases j with j | j <;> fin_cases i <;> fin_cases j <;>
     simp [blockEquiv, blockA, blockB]
 
-theorem charpoly_blockA (c s : ℝ) : (blockA c s).charpoly =
+theorem charpoly_blockA_aux (c s : ℝ) : (blockA c s).charpoly =
     X ^ 2 * (X ^ 2 + 4) + C (c ^ 2 + s ^ 2 - 1) * (C c^2 + C s^2 + 2*X^2 - 1) := by
   rw [Matrix.charpoly, Matrix.det_succ_row_zero]
   simp [Fin.sum_univ_succ, Matrix.det_fin_three, Matrix.charmatrix_apply, blockA,
     Matrix.submatrix_apply, Fin.succAbove, Matrix.diagonal_apply]
   ring
 
-theorem charpoly_blockB (c s : ℝ) : (blockB c s).charpoly =
+theorem charpoly_blockB_aux (c s : ℝ) : (blockB c s).charpoly =
     (X ^ 2 + C (2 - 2 * c)) ^ 2 + C (c ^ 2 + s ^ 2 - 1) * (C c^2 - 4*C c + C s^2 + 2*X^2 + 3) := by
   rw [Matrix.charpoly, Matrix.det_succ_row_zero]
   simp [Fin.sum_univ_succ, Matrix.det_fin_three, Matrix.charmatrix_apply, blockB,
@@ -134,13 +117,20 @@ theorem charpoly_blockB (c s : ℝ) : (blockB c s).charpoly =
   simp only [show (C (2 : ℝ) : ℝ[X]) = 2 from map_ofNat C 2]
   ring
 
-theorem flow_charpoly (c s : ℝ) (h : c ^ 2 + s ^ 2 = 1) :
-    (flowMat c s).charpoly = X ^ 2 * (X ^ 2 + 4) * (X ^ 2 + C (2 - 2 * c)) ^ 2 := by
-  rw [← Matrix.charpoly_reindex blockEquiv (flowMat c s), reindex_flow,
-    Matrix.charpoly_fromBlocks_zero₁₂, charpoly_blockA, charpoly_blockB,
-    show c ^ 2 + s ^ 2 - 1 = 0 by linarith, C_0]
+theorem charpoly_blockA (c s : ℝ) (h : c ^ 2 + s ^ 2 = 1) :
+    (blockA c s).charpoly = X ^ 2 * (X ^ 2 + 4) := by
+  rw [charpoly_blockA_aux, show c ^ 2 + s ^ 2 - 1 = 0 by linarith, C_0]
   ring
 
+theorem charpoly_blockB (c s : ℝ) (h : c ^ 2 + s ^ 2 = 1) :
+    (blockB c s).charpoly = (X ^ 2 + C (2 - 2 * c)) ^ 2 := by
+  rw [charpoly_blockB_aux, show c ^ 2 + s ^ 2 - 1 = 0 by linarith, C_0]
+  ring
+
+theorem flow_charpoly (c s : ℝ) (h : c ^ 2 + s ^ 2 = 1) :
+    (flowMat c s).charpoly = X ^ 2 * (X ^ 2 + 4) * (X ^ 2 + C (2 - 2 * c)) ^ 2 := by
+  rw [← Matrix.charpoly_reindex blockEquiv (flowMat c s), flow_block_diag,
+    Matrix.charpoly_fromBlocks_zero₁₂, charpoly_blockA c s h, charpoly_blockB c s h]
 
 theorem flow_eigenvalues (θ : ℝ) (hθ₀ : 0 < θ) (hθ₁ : θ < Real.pi) :
     ((flowMat (Real.cos θ) (Real.sin θ)).charpoly.map (algebraMap ℝ ℂ)).roots =
